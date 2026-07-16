@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
@@ -64,24 +65,33 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Top header banner
+        // Top header banner (premium design with tech background)
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          color: Theme.of(context).colorScheme.background,
+          height: 120,
+          margin: const EdgeInsets.only(left: 12, right: 12, top: 12, bottom: 4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            image: const DecorationImage(
+              image: AssetImage('assets/tech_bg.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset(
                 'assets/icon.png',
-                width: 38,
-                height: 38,
+                width: 44,
+                height: 44,
               ),
-              const SizedBox(width: 12),
-              Text(
+              const SizedBox(width: 16),
+              const Text(
                 "群青智能远程协助",
-                style: const TextStyle(
-                  fontSize: 20,
+                style: TextStyle(
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
             ],
@@ -114,21 +124,6 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     final cardContent = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Status indicator
-        Row(
-          children: [
-            const Icon(Icons.circle, color: Colors.green, size: 8),
-            const SizedBox(width: 6),
-            Text(
-              translate("Ready"),
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
-              ),
-            ),
-          ],
-        ).marginOnly(bottom: 8),
         buildTip(context),
         const SizedBox(height: 10),
         if (!isOutgoingOnly) buildIDBoard(context),
@@ -766,6 +761,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   @override
   void initState() {
     super.initState();
+    _startAssistancePolling();
     _updateTimer = periodic_immediate(const Duration(seconds: 1), () async {
       await gFFI.serverModel.fetchID();
       final error = await bind.mainGetError();
@@ -943,8 +939,69 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     }
   }
 
+  Timer? _assistancePollTimer;
+
+  void _startAssistancePolling() {
+    _assistancePollTimer?.cancel();
+    _assistancePollTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
+      if (!mounted) return;
+      final myId = gFFI.serverModel.id.value.replaceAll(' ', '');
+      if (myId.isEmpty || myId.length < 5) return;
+      
+      try {
+        final url = Uri.parse('http://39.185.236.111:21113/poll?support_id=$myId');
+        final response = await http.get(url).timeout(const Duration(seconds: 2));
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          if (data != null && data['has_call'] == true) {
+            final workerId = data['worker_id'].toString();
+            final workerName = data['worker_name'].toString();
+            _showCallDialog(workerId, workerName);
+          }
+        }
+      } catch (_) {
+        // Suppress network errors
+      }
+    });
+  }
+
+  void _showCallDialog(String workerId, String workerName) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.ring_volume, color: Colors.blue),
+              const SizedBox(width: 8),
+              const Text("协助请求"),
+            ],
+          ),
+          content: Text("设备 [ $workerName ] (ID: $workerId) 正在请求您的远程协助，是否同意连接？"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+              },
+              child: const Text("拒绝"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                connect(context, workerId);
+              },
+              child: const Text("同意并接入"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
+    _assistancePollTimer?.cancel();
     _uniLinksSubscription?.cancel();
     Get.delete<RxBool>(tag: 'stop-service');
     _updateTimer?.cancel();

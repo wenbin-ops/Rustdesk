@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -584,6 +586,46 @@ abstract class BasePeerCard extends StatelessWidget {
   }
 
   @protected
+  MenuEntryBase<String> _callSupportAction(BuildContext context) {
+    return MenuEntryButton<String>(
+      childBuilder: (TextStyle? style) => Text(
+        "呼叫协助",
+        style: style,
+      ),
+      proc: () async {
+        final supportId = peer.id;
+        final myId = gFFI.serverModel.id.value.replaceAll(' ', '');
+        final myName = gFFI.serverModel.userName.value.isNotEmpty
+            ? gFFI.serverModel.userName.value
+            : '设备_${myId.substring(myId.length > 4 ? myId.length - 4 : 0)}';
+        
+        try {
+          showToast("正在呼叫客服...");
+          final url = Uri.parse('http://39.185.236.111:21113/call');
+          final response = await http.post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'worker_id': myId,
+              'worker_name': myName,
+              'support_id': supportId,
+            }),
+          ).timeout(const Duration(seconds: 4));
+          if (response.statusCode == 200) {
+            showToast("呼叫成功，等待客服接受协助请求");
+          } else {
+            showToast("呼叫失败，服务器状态异常");
+          }
+        } catch (_) {
+          showToast("呼叫失败，无法连接到呼叫服务");
+        }
+      },
+      padding: menuPadding,
+      dismissOnClicked: true,
+    );
+  }
+
+  @protected
   MenuEntryBase<String> _transferFileAction(BuildContext context) {
     return _connectCommonAction(
       context,
@@ -967,6 +1009,7 @@ class RecentPeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
+      _callSupportAction(context),
       _connectAction(context),
       _transferFileAction(context),
       _viewCameraAction(context),
@@ -1032,6 +1075,7 @@ class FavoritePeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
+      _callSupportAction(context),
       _connectAction(context),
       _transferFileAction(context),
       _viewCameraAction(context),
@@ -1151,6 +1195,7 @@ class AddressBookPeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
+      _callSupportAction(context),
       _connectAction(context),
       _transferFileAction(context),
       _viewCameraAction(context),
@@ -1308,6 +1353,7 @@ class MyGroupPeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
+      _callSupportAction(context),
       _connectAction(context),
       _transferFileAction(context),
       _viewCameraAction(context),
