@@ -2982,18 +2982,15 @@ class ServerConfig {
 
   /// from local options
   ServerConfig.fromOptions(Map<String, dynamic> options)
-      : idServer = options['custom-rendezvous-server']?.toString().isNotEmpty == true
-            ? options['custom-rendezvous-server']!.toString()
-            : "39.185.236.111",
-        relayServer = options['relay-server']?.toString().isNotEmpty == true
-            ? options['relay-server']!.toString()
-            : "39.185.236.111",
-        apiServer = options['api-server']?.toString().isNotEmpty == true
-            ? options['api-server']!.toString()
-            : "http://39.185.236.111:21114",
-        key = options['key']?.toString().isNotEmpty == true
-            ? options['key']!.toString()
-            : "ilqVqweUhcUFdiw2o73tbaGLJAGU3cV0ef6jYbVCgxA=";
+      : idServer = (options['custom-rendezvous-server']?.toString() ?? "").trim(),
+        relayServer = (options['relay-server']?.toString() ?? "").trim(),
+        apiServer = (options['api-server']?.toString() ?? "").trim(),
+        key = (options['key']?.toString() ?? "").trim() {
+    if (idServer.isEmpty) idServer = "39.185.236.111";
+    if (relayServer.isEmpty) relayServer = "39.185.236.111";
+    if (apiServer.isEmpty) apiServer = "http://39.185.236.111:21114";
+    if (key.isEmpty) key = "ilqVqweUhcUFdiw2o73tbaGLJAGU3cV0ef6jYbVCgxA=";
+  }
 }
 
 Widget dialogButton(String text,
