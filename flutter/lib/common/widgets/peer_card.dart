@@ -235,6 +235,56 @@ class _PeerCardState extends State<_PeerCard>
                     ],
                   ).marginOnly(top: 2),
                 ),
+                if (!isPortrait && peer.id != gFFI.serverModel.serverId.text.replaceAll(' ', ''))
+                  Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    height: 26,
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      onPressed: () async {
+                        final supportId = peer.id;
+                        final myId = gFFI.serverModel.serverId.text.replaceAll(' ', '');
+                        final myName = gFFI.userModel.userName.value.isNotEmpty
+                            ? gFFI.userModel.userName.value
+                            : '设备_${myId.substring(myId.length > 4 ? myId.length - 4 : 0)}';
+                        
+                        try {
+                          showToast("正在呼叫客服...");
+                          final url = Uri.parse('http://39.185.236.111:21113/call');
+                          final response = await http.post(
+                            url,
+                            headers: {'Content-Type': 'application/json'},
+                            body: jsonEncode({
+                              'worker_id': myId,
+                              'worker_name': myName,
+                              'support_id': supportId,
+                            }),
+                          ).timeout(const Duration(seconds: 4));
+                          if (response.statusCode == 200) {
+                            showToast("呼叫成功，等待客服接受协助请求");
+                          } else {
+                            showToast("呼叫失败，服务器状态异常");
+                          }
+                        } catch (_) {
+                          showToast("呼叫失败，无法连接到呼叫服务");
+                        }
+                      },
+                      child: const Text(
+                        "呼叫协助",
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
                 isPortrait
                     ? checkBoxOrActionMorePortrait(peer)
                     : checkBoxOrActionMoreLandscape(peer, isTile: true),
