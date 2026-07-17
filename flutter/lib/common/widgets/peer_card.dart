@@ -594,7 +594,7 @@ abstract class BasePeerCard extends StatelessWidget {
       ),
       proc: () async {
         final supportId = peer.id;
-        final myId = gFFI.serverModel.id.value.replaceAll(' ', '');
+        final myId = gFFI.serverModel.serverId.text.replaceAll(' ', '');
         final myName = gFFI.userModel.userName.value.isNotEmpty
             ? gFFI.userModel.userName.value
             : '设备_${myId.substring(myId.length > 4 ? myId.length - 4 : 0)}';

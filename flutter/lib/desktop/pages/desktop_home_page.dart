@@ -945,7 +945,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     _assistancePollTimer?.cancel();
     _assistancePollTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
       if (!mounted) return;
-      final myId = gFFI.serverModel.id.value.replaceAll(' ', '');
+      final myId = gFFI.serverModel.serverId.text.replaceAll(' ', '');
       if (myId.isEmpty || myId.length < 5) return;
       
       try {
