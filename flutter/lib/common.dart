@@ -1610,6 +1610,19 @@ Future<void> initGlobalFFI() async {
   debugPrint("_globalFFI init end");
   // after `put`, can also be globally found by Get.find<FFI>();
   Get.put<FFI>(_globalFFI, permanent: true);
+
+  // Auto-fill and save custom server settings if they are not set yet
+  try {
+    final customServer = await bind.mainGetOption(key: 'custom-rendezvous-server');
+    if (customServer.isEmpty) {
+      await bind.mainSetOption(key: 'custom-rendezvous-server', value: "39.185.236.111");
+      await bind.mainSetOption(key: 'relay-server', value: "39.185.236.111");
+      await bind.mainSetOption(key: 'api-server', value: "http://39.185.236.111:21114");
+      await bind.mainSetOption(key: 'key', value: "ilqVqweUhcUFdiw2o73tbaGLJAGU3cV0ef6jYbVCgxA=");
+    }
+  } catch (e) {
+    debugPrint("Failed to auto-write server config on startup: $e");
+  }
 }
 
 String translate(String name) {
