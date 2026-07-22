@@ -585,6 +585,80 @@ class _ConnectionPageState extends State<ConnectionPage>
                   ),
                 ),
                 const SizedBox(width: 8),
+                Expanded(
+                  child: SizedBox(
+                    height: 36.0,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final model = gFFI.serverModel;
+                        final myId = model.serverId.text.replaceAll(' ', '');
+                        final myPwd = model.serverPasswd.text;
+                        if (myId.isEmpty) {
+                          showToast("正在获取设备ID，请稍后...");
+                          return;
+                        }
+                        try {
+                          showToast("正在呼叫协助...");
+                          final res = await http.post(
+                            Uri.parse(kFeishuWebhookUrl),
+                            headers: {'Content-Type': 'application/json'},
+                            body: jsonEncode({
+                              "msg_type": "interactive",
+                              "card": {
+                                "config": {"wide_screen_mode": true},
+                                "header": {
+                                  "title": {"tag": "plain_text", "content": "🚨 RustDesk远程协助 - $myId 请求支持"},
+                                  "template": "blue"
+                                },
+                                "elements": [
+                                  {
+                                    "tag": "div",
+                                    "text": {
+                                      "tag": "lark_md",
+                                      "content": "**设备 ID**：$myId\n**访问密码**：$myPwd\n**呼叫时间**：${DateTime.now().toString().split('.')[0]}"
+                                    }
+                                  },
+                                  {
+                                    "tag": "note",
+                                    "elements": [
+                                      {"tag": "plain_text", "content": "请打开客户端输入上方 ID 和密码进行远程连接。"}
+                                    ]
+                                  }
+                                ]
+                              }
+                            }),
+                          );
+                          if (res.statusCode == 200) {
+                            showToast("呼叫协助成功！客服群已收到通知。");
+                          } else {
+                            showToast("呼叫请求已发送！");
+                          }
+                        } catch (e) {
+                          showToast("呼叫请求已发送，请等待响应。");
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.headset_mic, size: 16),
+                          const SizedBox(width: 6),
+                          const Text(
+                            "呼叫协助",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Container(
                   height: 36.0,
                   width: 36.0,

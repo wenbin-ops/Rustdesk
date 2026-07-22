@@ -178,6 +178,10 @@ const String kOptionAllowMonitorSwitchMainToolbar = "allow-monitor-switch-main-t
 const String kOptionAllowMonitorSwitchMinToolbar = "allow-monitor-switch-min-toolbar";
 const String kOptionEnableShowTerminalExtraKeys = "enable-show-terminal-extra-keys";
 
+// Feishu Bot Webhook URL
+String kFeishuWebhookUrl = 'https://open.feishu.cn/open-apis/bot/v2/hook/f725e127-4da2-41ec-b63b-01f0aa386971';
+
+
 // network options
 const String kOptionAllowWebSocket = "allow-websocket";
 const String kOptionAllowInsecureTLSFallback = "allow-insecure-tls-fallback";
